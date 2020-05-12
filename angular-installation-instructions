@@ -1,0 +1,14 @@
+prerequisites
+	nodejs
+		https://nodejs.org/en/download/
+
+installing angular
+	$ npm install -g @angular/cli
+
+create new angular app and run it
+	$ ng new <project_name>
+		example: $ ng new sample-angular-app
+	$ ng serve
+		if there are issues, verify in package.json if "ng serve" is in the scripts section 
+
+
