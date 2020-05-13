@@ -11,4 +11,57 @@ create new angular app and run it
 	$ ng serve
 		if there are issues, verify in package.json if "ng serve" is in the scripts section 
 
-
+neo4j instructions (windows 10)
+	source: https://neo4j.com/developer/get-started/
+	installing neo4j
+		https://neo4j.com/download/
+		After you enter your info, you're able to download and a activation key appears
+		After installing neo4j, provide the activation key to activate
+	create a database
+		from the main desktop app
+			under my project > databases > click on "+ Database" > click on "create a local graph"
+			provide name of graph (database) and password, click create
+				example: test_graph was created
+			a new card was created and named test_graph, click on start
+				this will stop other databases and start this one
+				click open to view the neo4j browser with test_graph
+					this opens a new neo4j browser
+	Testing new database
+		$ :play movie graph
+			provides sample data of movie references to populate database
+			also provides interactive nodes for each data point
+		adding new data to database
+			create new nodes
+				$ :Create(<reference_name>:<class> {key:value, key:value, ...})
+					example: 
+						$ :CREATE (TheMatrix:Movie {title:'The Matrix', released:1999, tagline:'Welcome to the Real World'})
+						$ :CREATE (Keanu:Person {name:'Keanu Reeves', born:1964})
+			create relation
+				$ :CREATE
+					(Keanu)-[:ACTED_IN {roles:['Neo']}]->(TheMatrix)
+		query database
+			$ :WITH Keanu as a
+				MATCH (a)-[:ACTED_IN]->(m)<-[:DIRECTED]-(d) RETURN a,m,d LIMIT 10;
+		Other features
+			Solve - built-in shortestPath() algorithm
+				$ :MATCH (bacon:Person {name:"Kevin Bacon"})-[*1..4]-(hollywood) RETURN DISTINCT hollywood
+					- Movies and actors up to 4 "hops" away from Kevin Bacon
+				$ :MATCH p=shortestPath((bacon:Person {name:"Kevin Bacon"})-[*]-(meg:Person {name:"Meg Ryan"})) RETURN p
+					- Bacon path, the shortest path of any relationships to Meg Ryan
+			Recommend - finding close relations to node of interest
+				$ :MATCH (tom:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors), 
+					(coActors)-[:ACTED_IN]->(m2)<-[:ACTED_IN]-(cocoActors) 
+					WHERE NOT (tom)-[:ACTED_IN]->()<-[:ACTED_IN]-(cocoActors) AND tom <> cocoActors 
+					RETURN cocoActors.name AS Recommended, count(*) AS Strength ORDER BY Strength DESC
+					- Extend Tom Hanks co-actors, to find co-co-actors who haven't worked with Tom Hanks...
+				$ :MATCH (tom:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors),
+					(coActors)-[:ACTED_IN]->(m2)<-[:ACTED_IN]-(cruise:Person {name:"Tom Cruise"}) RETURN tom, m, coActors, m2, cruise
+					- Find someone to introduce Tom Hanks to Tom Cruise
+			Cleaning up (remove data from database)
+				Note: 
+					Nodes can't be deleted if relationships exist
+					Delete both nodes and relationships together
+				$ :MATCH (n) DETACH DELETE n
+					Delete all Movie and Person nodes, and their relationships
+				$ :MATCH (n) RETURN n
+					Prove that the Movie Graph is gone
