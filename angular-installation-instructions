@@ -1,6 +1,11 @@
 prerequisites
 	nodejs
 		https://nodejs.org/en/download/
+	proxies
+		(windows) modify .npmrc
+			c:\users\<user>\.npmrc
+			proxy=http://<user>:<pass>@<proxy-host>:<port>
+			https-proxy=http://<user>:<pass>@<proxy-host>:<port>
 
 installing angular
 	$ npm install -g @angular/cli
@@ -14,54 +19,95 @@ create new angular app and run it
 neo4j instructions (windows 10)
 	source: https://neo4j.com/developer/get-started/
 	installing neo4j
-		https://neo4j.com/download/
-		After you enter your info, you're able to download and a activation key appears
-		After installing neo4j, provide the activation key to activate
-	create a database
-		from the main desktop app
-			under my project > databases > click on "+ Database" > click on "create a local graph"
-			provide name of graph (database) and password, click create
-				example: test_graph was created
-			a new card was created and named test_graph, click on start
-				this will stop other databases and start this one
-				click open to view the neo4j browser with test_graph
-					this opens a new neo4j browser
-	Testing new database
-		$ :play movie graph
-			provides sample data of movie references to populate database
-			also provides interactive nodes for each data point
-		adding new data to database
-			create new nodes
-				$ :Create(<reference_name>:<class> {key:value, key:value, ...})
-					example: 
-						$ :CREATE (TheMatrix:Movie {title:'The Matrix', released:1999, tagline:'Welcome to the Real World'})
-						$ :CREATE (Keanu:Person {name:'Keanu Reeves', born:1964})
-			create relation
-				$ :CREATE
-					(Keanu)-[:ACTED_IN {roles:['Neo']}]->(TheMatrix)
-		query database
-			$ :WITH Keanu as a
-				MATCH (a)-[:ACTED_IN]->(m)<-[:DIRECTED]-(d) RETURN a,m,d LIMIT 10;
-		Other features
-			Solve - built-in shortestPath() algorithm
-				$ :MATCH (bacon:Person {name:"Kevin Bacon"})-[*1..4]-(hollywood) RETURN DISTINCT hollywood
-					- Movies and actors up to 4 "hops" away from Kevin Bacon
-				$ :MATCH p=shortestPath((bacon:Person {name:"Kevin Bacon"})-[*]-(meg:Person {name:"Meg Ryan"})) RETURN p
-					- Bacon path, the shortest path of any relationships to Meg Ryan
-			Recommend - finding close relations to node of interest
-				$ :MATCH (tom:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors), 
-					(coActors)-[:ACTED_IN]->(m2)<-[:ACTED_IN]-(cocoActors) 
-					WHERE NOT (tom)-[:ACTED_IN]->()<-[:ACTED_IN]-(cocoActors) AND tom <> cocoActors 
-					RETURN cocoActors.name AS Recommended, count(*) AS Strength ORDER BY Strength DESC
-					- Extend Tom Hanks co-actors, to find co-co-actors who haven't worked with Tom Hanks...
-				$ :MATCH (tom:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors),
-					(coActors)-[:ACTED_IN]->(m2)<-[:ACTED_IN]-(cruise:Person {name:"Tom Cruise"}) RETURN tom, m, coActors, m2, cruise
-					- Find someone to introduce Tom Hanks to Tom Cruise
-			Cleaning up (remove data from database)
-				Note: 
-					Nodes can't be deleted if relationships exist
-					Delete both nodes and relationships together
-				$ :MATCH (n) DETACH DELETE n
-					Delete all Movie and Person nodes, and their relationships
-				$ :MATCH (n) RETURN n
-					Prove that the Movie Graph is gone
+		enterprise
+			https://neo4j.com/download/
+			After you enter your info, you're able to download and a activation key appears
+			After installing neo4j, provide the activation key to activate
+		community
+			prerequisites
+				java 11
+					you may need to remove previous java installations if they conflict with open jdk 11
+			https://neo4j.com/download-center/#community
+			unzip and place in permanent folder
+				example: c:\..\Desktop\neo4j
+			windows key > enter "Edit environment variables for your account"
+			In the environment variables popup window
+				Add to Path: c:\..\Desktop\neo4j\bin
+			open command prompt: windows key > enter "cmd"
+			NOTE: there may be a previous PID running and not showing neo4j is running
+				By default, neo4j uses port 7687
+				Check if port is used by PID
+					(windows CMD) $ netstat -aon | find ":7687"
+						PID is on far right if exist
+						To end: Windows desktop view > right click on task bar > Task manager > Details tab > sort by PID
+							Look for PID found earlier, click "end task"
+						verify ended with the CMD window using the same command
+			in command prompt console window, enter $ neo4j install-service
+				this will use java to install the backend server
+			$ neo4j console
+				this will allow connections to a web interface
+			open browser and enter in URL: 127.0.0.1:7474
+				this opens up neo4j in browser
+				enter username (default: neo4j)
+				enter password (default: neo4j)
+				change password
+	Using community edition (windows)
+		run some tutorials
+			neo4j$ :play start
+		create database
+			neo4j$ :use system
+				switches from neo4j to system
+			system$ show databases
+				view list of databases
+			system$ create database <database_name>
+				example: system$ create database movieGraph
+				to verify: $ show databases
+	Using enterprise edition
+		create a database
+			from the main desktop app
+				under my project > databases > click on "+ Database" > click on "create a local graph"
+				provide name of graph (database) and password, click create
+					example: test_graph was created
+				a new card was created and named test_graph, click on start
+					this will stop other databases and start this one
+					click open to view the neo4j browser with test_graph
+						this opens a new neo4j browser
+		Testing new database
+			$ :play movie graph
+				provides sample data of movie references to populate database
+				also provides interactive nodes for each data point
+			adding new data to database
+				create new nodes
+					$ :Create(<reference_name>:<class> {key:value, key:value, ...})
+						example: 
+							$ :CREATE (TheMatrix:Movie {title:'The Matrix', released:1999, tagline:'Welcome to the Real World'})
+							$ :CREATE (Keanu:Person {name:'Keanu Reeves', born:1964})
+				create relation
+					$ :CREATE
+						(Keanu)-[:ACTED_IN {roles:['Neo']}]->(TheMatrix)
+			query database
+				$ :WITH Keanu as a
+					MATCH (a)-[:ACTED_IN]->(m)<-[:DIRECTED]-(d) RETURN a,m,d LIMIT 10;
+			Other features
+				Solve - built-in shortestPath() algorithm
+					$ :MATCH (bacon:Person {name:"Kevin Bacon"})-[*1..4]-(hollywood) RETURN DISTINCT hollywood
+						- Movies and actors up to 4 "hops" away from Kevin Bacon
+					$ :MATCH p=shortestPath((bacon:Person {name:"Kevin Bacon"})-[*]-(meg:Person {name:"Meg Ryan"})) RETURN p
+						- Bacon path, the shortest path of any relationships to Meg Ryan
+				Recommend - finding close relations to node of interest
+					$ :MATCH (tom:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors), 
+						(coActors)-[:ACTED_IN]->(m2)<-[:ACTED_IN]-(cocoActors) 
+						WHERE NOT (tom)-[:ACTED_IN]->()<-[:ACTED_IN]-(cocoActors) AND tom <> cocoActors 
+						RETURN cocoActors.name AS Recommended, count(*) AS Strength ORDER BY Strength DESC
+						- Extend Tom Hanks co-actors, to find co-co-actors who haven't worked with Tom Hanks...
+					$ :MATCH (tom:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors),
+						(coActors)-[:ACTED_IN]->(m2)<-[:ACTED_IN]-(cruise:Person {name:"Tom Cruise"}) RETURN tom, m, coActors, m2, cruise
+						- Find someone to introduce Tom Hanks to Tom Cruise
+				Cleaning up (remove data from database)
+					Note: 
+						Nodes can't be deleted if relationships exist
+						Delete both nodes and relationships together
+					$ :MATCH (n) DETACH DELETE n
+						Delete all Movie and Person nodes, and their relationships
+					$ :MATCH (n) RETURN n
+						Prove that the Movie Graph is gone
